@@ -1,0 +1,1480 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InstaBiz Control Sheet — Mini Business Manager</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f172a;
+    --muted:#64748b;
+    --brand1:#7c3aed;
+    --brand2:#ec4899;
+    --brand3:#f97316;
+  }
+  *{ -webkit-font-smoothing:antialiased; }
+  body{
+    font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 100% -10%, rgba(236,72,153,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(124,58,237,.10), transparent 55%),
+      #f6f7fb;
+  }
+  .grad-text{
+    background:linear-gradient(92deg,#7c3aed 0%,#ec4899 52%,#f97316 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .grad-bg{ background:linear-gradient(120deg,#7c3aed 0%,#a855f7 35%,#ec4899 70%,#f97316 100%); }
+  .card{
+    background:#fff; border:1px solid rgba(148,163,184,.18);
+    border-radius:20px; box-shadow:0 1px 2px rgba(15,23,42,.04), 0 12px 32px -18px rgba(15,23,42,.22);
+  }
+  .card-hover{ transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; }
+  .card-hover:hover{ transform:translateY(-3px); box-shadow:0 22px 48px -22px rgba(15,23,42,.34); }
+  .tab-btn{ transition:all .22s ease; position:relative; }
+  .tab-btn.active{ color:#fff; }
+  .tab-btn.active .tab-ico{ background:rgba(255,255,255,.16); }
+  .tab-btn:not(.active):hover{ background:rgba(148,163,184,.16); color:#fff; }
+  .panel{ display:none; animation:fade .38s ease; }
+  .panel.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+  table{ border-collapse:separate; border-spacing:0; }
+  thead th{
+    position:sticky; top:0; z-index:5;
+    background:#f8fafc; color:#64748b;
+    font-size:11px; letter-spacing:.09em; text-transform:uppercase; font-weight:700;
+    padding:14px 16px; border-bottom:1px solid #e2e8f0; white-space:nowrap;
+  }
+  tbody td{ padding:14px 16px; font-size:13.5px; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+  tbody tr{ transition:background .18s; }
+  tbody tr:hover{ background:#faf9ff; }
+  .badge{ display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:.01em; }
+  .dot{ width:6px; height:6px; border-radius:999px; }
+  .chip{ font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; }
+  .scroll-x{ overflow-x:auto; }
+  .scroll-x::-webkit-scrollbar{ height:8px; }
+  .scroll-x::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:99px; }
+  .scroll-x::-webkit-scrollbar-track{ background:transparent; }
+  input,select{ outline:none; }
+  .field{
+    width:100%; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px;
+    padding:11px 14px; font-size:14px; color:#0f172a; transition:border .2s, box-shadow .2s;
+  }
+  .field:focus{ border-color:#a855f7; box-shadow:0 0 0 4px rgba(168,85,247,.14); }
+  .kpi-accent{ position:absolute; inset:0; border-radius:20px; opacity:.07; }
+  .glow-ring{ box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 18px 50px -20px rgba(124,58,237,.55); }
+  .bar-track{ height:8px; background:#eef2f7; border-radius:999px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:999px; transition:width .7s cubic-bezier(.2,.8,.2,1); }
+  .chart-\boxed{ position:relative; width:100%; }
+  .nav-scroll::-webkit-scrollbar{ display:none; }
+  .nav-scroll{ -ms-overflow-style:none; scrollbar-width:none; }
+  .step-num{
+    width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;color:#fff;flex-shrink:0;
+  }
+  .toast{
+    position:fixed; right:20px; bottom:20px; z-index:80; transform:translateY(120%);
+    transition:transform .45s cubic-bezier(.2,.9,.2,1);
+  }
+  .toast.show{ transform:translateY(0); }
+  .modal-back{ background:rgba(15,23,42,.55); backdrop-filter:blur(6px); }
+  .seg{ background:#f1f5f9; border-radius:12px; padding:4px; display:inline-flex; gap:4px; }
+  .seg button{ padding:8px 16px; border-radius:9px; font-size:12.5px; font-weight:700; color:#64748b; transition:.2s; }
+  .seg button.on{ background:#fff; color:#7c3aed; box-shadow:0 4px 14px -6px rgba(15,23,42,.28); }
+</style>
+</head>
+<body>
+
+<div class="flex min-h-screen">
+  <!-- SIDEBAR -->
+  <aside class="hidden lg:flex lg:flex-col w-[264px] shrink-0 p-5 sticky top-0 h-screen">
+    <div class="rounded-[22px] p-5 grad-bg glow-ring">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17.2" cy="6.8" r="1.1" fill="#fff" stroke="none"/></svg>
+        </div>
+        <div>
+          <p class="text-white font-extrabold text-[16px] leading-tight">InstaBiz</p>
+          <p class="text-white/75 text-[11px] font-semibold tracking-wide">CONTROL SHEET</p>
+        </div>
+      </div>
+      <p class="text-white/85 text-[11.5px] leading-relaxed mt-4">
+        Stop managing your Instagram / WhatsApp business through chats, notebooks &amp; memory.
+      </p>
+    </div>
+
+    <nav class="mt-6 space-y-1.5" id="navDesktop"></nav>
+
+    <div class="mt-auto rounded-2xl border border-slate-200/70 bg-white p-4">
+      <p class="text-[11px] font-extrabold text-slate-400 tracking-widest">SELLER JOURNEY</p>
+      <div class="mt-3 space-y-2 text-[11.5px] font-semibold text-slate-500">
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span> DM comes in</div>
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-fuchsia-500"></span> Order + Payment</div>
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-pink-500"></span> Prepare &amp; Dispatch</div>
+        <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Delivery → Profit → Repeat</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 min-w-0">
+    <!-- TOP BAR -->
+    <header class="px-4 sm:px-7 pt-5 pb-2">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 lg:hidden mb-2">
+            <div class="w-9 h-9 rounded-xl grad-bg flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.5"/></svg>
+            </div>
+            <span class="font-extrabold text-slate-800">InstaBiz Control Sheet</span>
+          </div>
+          <h1 class="text-[24px] sm:text-[30px] font-extrabold text-slate-900 leading-tight" id="pageTitle">Dashboard</h1>
+          <p class="text-slate-500 text-[13px] mt-1 font-medium" id="pageSub">Your whole business at a glance — revenue, profit, orders &amp; what needs attention today.</p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <div class="hidden sm:flex items-center gap-2.5 bg-white border border-slate-200 rounded-2xl px-4 py-2.5">
+            <div class="w-9 h-9 rounded-xl grad-bg flex items-center justify-center text-white text-[12px] font-extrabold">RS</div>
+            <div>
+              <p class="text-[12.5px] font-bold text-slate-800 leading-tight">Riya's Handmade</p>
+              <p class="text-[10.5px] text-slate-400 font-semibold">@riyashandmade · July 2024</p>
+            </div>
+          </div>
+          <button onclick="openModal()" class="flex items-center gap-2 text-white font-bold text-[13px] px-5 py-3 rounded-2xl grad-bg shadow-lg shadow-fuchsia-500/25 hover:shadow-xl hover:-translate-y-0.5 transition">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New Order
+          </button>
+        </div>
+      </div>
+
+      <!-- MOBILE NAV -->
+      <div class="lg:hidden mt-4 -mx-4 px-4 overflow-x-auto nav-scroll">
+        <div class="flex gap-2 min-w-max" id="navMobile"></div>
+      </div>
+    </header>
+
+    <!-- ================= TAB 1 : DASHBOARD ================= -->
+    <section class="panel active px-4 sm:px-7 pb-10" id="tab-dashboard">
+      <!-- KPI -->
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 mt-4">
+        <div class="card card-hover p-5 relative overflow-hidden">
+          <div class="kpi-accent grad-bg"></div>
+          <div class="relative">
+            <div class="flex items-center justify-between">
+              <p class="text-[11px] font-extrabold tracking-widest text-slate-400">THIS MONTH REVENUE</p>
+              <span class="chip bg-emerald-50 text-emerald-600">▲ 10.2%</span>
+            </div>
+            <p class="text-[30px] font-extrabold text-slate-900 mt-2 leading-none">₹38,450</p>
+            <div class="bar-track mt-4"><div class="bar-fill grad-bg" style="width:86%"></div></div>
+            <p class="text-[11px] text-slate-400 mt-2 font-semibold">86% of ₹45,000 monthly goal</p>
+          </div>
+        </div>
+
+        <div class="card card-hover p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">PROFIT</p>
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.4" stroke-linecap="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M20 8h-4"/></svg>
+            </div>
+          </div>
+          <p class="text-[30px] font-extrabold text-slate-900 mt-2 leading-none">₹14,620</p>
+          <p class="text-[11px] text-slate-400 mt-2 font-semibold">Margin <span class="text-emerald-600 font-bold">38.0%</span> · vs ₹13,200 last mo.</p>
+        </div>
+
+        <div class="card card-hover p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">ORDERS</p>
+            <div class="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.2"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 016 0"/></svg>
+            </div>
+          </div>
+          <p class="text-[30px] font-extrabold text-slate-900 mt-2 leading-none">47</p>
+          <p class="text-[11px] text-slate-400 mt-2 font-semibold">Avg order <span class="text-slate-700 font-bold">₹818</span> · 1.6/day</p>
+        </div>
+
+        <div class="card card-hover p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">PENDING PAYMENTS</p>
+            <div class="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </div>
+          </div>
+          <p class="text-[30px] font-extrabold text-rose-600 mt-2 leading-none">₹4,750</p>
+          <p class="text-[11px] text-slate-400 mt-2 font-semibold"><span class="text-rose-500 font-bold">5 customers</span> still owe you</p>
+        </div>
+
+        <div class="card card-hover p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">ORDERS TO SHIP</p>
+            <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.2"><rect x="1" y="6" width="14" height="11" rx="2"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+            </div>
+          </div>
+          <p class="text-[30px] font-extrabold text-slate-900 mt-2 leading-none" id="kpiShip">8</p>
+          <p class="text-[11px] text-slate-400 mt-2 font-semibold">New · Preparing · Packed · Shipped</p>
+        </div>
+
+        <div class="card card-hover p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">LOW-STOCK PRODUCTS</p>
+            <div class="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2"><path d="M12 3l9 16H3L12 3z"/><path d="M12 10v4M12 17h.01"/></svg>
+            </div>
+          </div>
+          <p class="text-[30px] font-extrabold text-orange-600 mt-2 leading-none" id="kpiLow">3</p>
+          <p class="text-[11px] text-slate-400 mt-2 font-semibold">Reorder before you run out</p>
+        </div>
+
+        <div class="card card-hover p-5">
+          <div class="flex items-center justify-between">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">REPEAT CUSTOMERS</p>
+            <div class="w-8 h-8 rounded-xl bg-pink-50 flex items-center justify-center">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="2.2"><path d="M20.8 6.6a5 5 0 00-7.1 0L12 8.3l-1.7-1.7a5 5 0 10-7.1 7.1L12 22l8.8-8.3a5 5 0 000-7.1z"/></svg>
+            </div>
+          </div>
+          <p class="text-[30px] font-extrabold text-slate-900 mt-2 leading-none" id="kpiRepeat">11</p>
+          <p class="text-[11px] text-slate-400 mt-2 font-semibold">23% of customers came back</p>
+        </div>
+
+        <div class="card card-hover p-5 relative overflow-hidden">
+          <div class="kpi-accent" style="background:linear-gradient(135deg,#0ea5e9,#22d3ee)"></div>
+          <div class="relative">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-400">TODAY'S FOCUS</p>
+            <p class="text-[15px] font-extrabold text-slate-900 mt-2 leading-snug">3 orders to pack<br>+ ₹2,100 to collect</p>
+            <button onclick="go('payments')" class="mt-3 text-[11.5px] font-bold text-white bg-slate-900 px-4 py-2 rounded-xl hover:bg-slate-700 transition">Open Payments →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
+        <div class="card p-5 xl:col-span-2">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-[16px] font-extrabold text-slate-900">Sales by month</h3>
+              <p class="text-[12px] text-slate-400 font-medium mt-0.5">Revenue vs profit over the last 7 months</p>
+            </div>
+            <div class="seg" id="salesSeg">
+              <button class="on" data-mode="both">Revenue + Profit</button>
+              <button data-mode="revenue">Revenue</button>
+              <button data-mode="profit">Profit</button>
+            </div>
+          </div>
+          <div class="chart-box mt-4"><canvas id="salesChart"></canvas></div>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Top-selling products</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">By units sold this quarter</p>
+          <div class="chart-box mt-3"><canvas id="topProductsChart"></canvas></div>
+          <div class="mt-4 space-y-2.5" id="topProductsLegend"></div>
+        </div>
+      </div>
+
+      <!-- PIPELINE + ACTIVITY -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
+        <div class="card p-5 xl:col-span-2">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Order pipeline</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Where your 20 recent orders are right now</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mt-4" id="pipeline"></div>
+          <div class="chart-box mt-5"><canvas id="pipelineChart"></canvas></div>
+        </div>
+
+        <div class="card p-5">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Your first 60 minutes</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Get the sheet running in 4 steps</p>
+          <div class="mt-4 space-y-3">
+            <div class="flex gap-3 items-start">
+              <div class="step-num grad-bg">1</div>
+              <div><p class="text-[13px] font-bold text-slate-800">Create the six tabs</p><p class="text-[11.5px] text-slate-400 font-medium">Dashboard, Orders, Customers, Inventory, Profit, Payments.</p></div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <div class="step-num" style="background:#a855f7">2</div>
+              <div><p class="text-[13px] font-bold text-slate-800">Set up the Orders columns</p><p class="text-[11.5px] text-slate-400 font-medium">Order ID, Date, Customer, Phone, Instagram, Amount, Payment, Status.</p></div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <div class="step-num" style="background:#ec4899">3</div>
+              <div><p class="text-[13px] font-bold text-slate-800">Add 20 fake orders</p><p class="text-[11.5px] text-slate-400 font-medium">Test every status from New → Delivered.</p></div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <div class="step-num" style="background:#f97316">4</div>
+              <div><p class="text-[13px] font-bold text-slate-800">Run one full customer journey</p><p class="text-[11.5px] text-slate-400 font-medium">DM → order → payment → dispatch → delivery → profit.</p></div>
+            </div>
+          </div>
+          <div class="mt-5 rounded-2xl p-4" style="background:linear-gradient(120deg,#f5f3ff,#fdf2f8)">
+            <p class="text-[12px] font-bold text-slate-700 leading-relaxed">“If that journey works end-to-end — <span class="grad-text font-extrabold">you have a product.</span>”</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 2 : ORDERS ================= -->
+    <section class="panel px-4 sm:px-7 pb-10" id="tab-orders">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3.5 mt-4">
+        <div class="card p-4"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">TOTAL ORDERS</p><p class="text-[24px] font-extrabold text-slate-900 mt-1" id="ordTotal">20</p></div>
+        <div class="card p-4"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">ORDER VALUE</p><p class="text-[24px] font-extrabold text-slate-900 mt-1" id="ordValue">₹0</p></div>
+        <div class="card p-4"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">PAID</p><p class="text-[24px] font-extrabold text-emerald-600 mt-1" id="ordPaid">₹0</p></div>
+        <div class="card p-4"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">UNPAID / COD</p><p class="text-[24px] font-extrabold text-rose-600 mt-1" id="ordUnpaid">₹0</p></div>
+        <div class="card p-4"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">DELIVERED</p><p class="text-[24px] font-extrabold text-slate-900 mt-1" id="ordDelivered">0</p></div>
+      </div>
+
+      <div class="card mt-5">
+        <div class="p-5 flex flex-wrap items-center gap-3 justify-between border-b border-slate-100">
+          <div>
+            <h3 class="text-[16px] font-extrabold text-slate-900">All orders</h3>
+            <p class="text-[12px] text-slate-400 font-medium mt-0.5">Colour-coded by status — filter, search and track every order.</p>
+          </div>
+          <div class="flex flex-wrap gap-2.5">
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
+              <input id="orderSearch" class="field pl-10 w-[210px]" placeholder="Search customer, product, ID…">
+            </div>
+            <select id="statusFilter" class="field w-[170px]">
+              <option value="all">All statuses</option>
+              <option>New</option><option>Preparing</option><option>Packed</option>
+              <option>Shipped</option><option>Delivered</option><option>Cancelled</option><option>Returned</option>
+            </select>
+            <select id="payFilter" class="field w-[160px]">
+              <option value="all">All payments</option>
+              <option>UPI</option><option>Cash</option><option>COD</option><option>Bank transfer</option><option>Other</option>
+            </select>
+            <button onclick="openModal()" class="px-5 py-2.5 rounded-xl text-white font-bold text-[13px] grad-bg hover:-translate-y-0.5 transition shadow-lg shadow-fuchsia-500/20">+ Add order</button>
+          </div>
+        </div>
+        <div class="scroll-x max-h-[620px] overflow-y-auto">
+          <table class="w-full min-w-[1180px]">
+            <thead>
+              <tr>
+                <th class="text-left">Order ID</th>
+                <th class="text-left">Date</th>
+                <th class="text-left">Customer</th>
+                <th class="text-left">Product</th>
+                <th class="text-center">Qty</th>
+                <th class="text-right">Amount</th>
+                <th class="text-center">Paid?</th>
+                <th class="text-left">Payment</th>
+                <th class="text-left">Order Status</th>
+                <th class="text-left">Delivery Date</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div class="p-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
+          <p class="text-[12px] text-slate-400 font-semibold">Showing <span id="ordShown" class="text-slate-700 font-bold">20</span> orders · conditional formatting applied automatically</p>
+          <div class="flex gap-1.5 flex-wrap" id="statusLegend"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3 : CUSTOMERS ================= -->
+    <section class="panel px-4 sm:px-7 pb-10" id="tab-customers">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mt-4">
+        <div class="card card-hover p-5">
+          <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">TOTAL CUSTOMERS</p>
+          <p class="text-[30px] font-extrabold text-slate-900 mt-1 leading-none">14</p>
+          <p class="text-[11px] text-slate-400 font-semibold mt-2">+4 new this month</p>
+        </div>
+        <div class="card card-hover p-5">
+          <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">NEW · 1 ORDER</p>
+          <p class="text-[30px] font-extrabold text-sky-600 mt-1 leading-none">3</p>
+          <div class="bar-track mt-3"><div class="bar-fill" style="width:21%;background:#0ea5e9"></div></div>
+        </div>
+        <div class="card card-hover p-5">
+          <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">REPEAT · 2–3 ORDERS</p>
+          <p class="text-[30px] font-extrabold text-violet-600 mt-1 leading-none">7</p>
+          <div class="bar-track mt-3"><div class="bar-fill" style="width:50%;background:#7c3aed"></div></div>
+        </div>
+        <div class="card card-hover p-5">
+          <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">VIP · 4+ ORDERS</p>
+          <p class="text-[30px] font-extrabold text-amber-500 mt-1 leading-none">4</p>
+          <div class="bar-track mt-3"><div class="bar-fill" style="width:29%;background:#f59e0b"></div></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
+        <div class="card p-5">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Customer mix</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Auto-classified by number of orders</p>
+          <div class="chart-box mt-3"><canvas id="customerMixChart"></canvas></div>
+          <div class="mt-4 space-y-2">
+            <div class="flex items-center justify-between text-[12px] font-semibold"><span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-full" style="background:#0ea5e9"></span>New customer</span><span class="text-slate-900">1 order</span></div>
+            <div class="flex items-center justify-between text-[12px] font-semibold"><span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-full" style="background:#7c3aed"></span>Repeat customer</span><span class="text-slate-900">2–3 orders</span></div>
+            <div class="flex items-center justify-between text-[12px] font-semibold"><span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-full" style="background:#f59e0b"></span>VIP</span><span class="text-slate-900">4+ orders</span></div>
+          </div>
+        </div>
+
+        <div class="card p-5 xl:col-span-2">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Top customers by spend</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Who is actually driving your revenue</p>
+          <div class="chart-box mt-3"><canvas id="topCustomersChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card mt-5">
+        <div class="p-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-[16px] font-extrabold text-slate-900">Customer list</h3>
+            <p class="text-[12px] text-slate-400 font-medium mt-0.5">Status updates automatically as orders are added.</p>
+          </div>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
+            <input id="custSearch" class="field pl-10 w-[230px]" placeholder="Search customer…">
+          </div>
+        </div>
+        <div class="scroll-x">
+          <table class="w-full min-w-[900px]">
+            <thead>
+              <tr>
+                <th class="text-left">Customer</th>
+                <th class="text-left">Phone</th>
+                <th class="text-left">Instagram</th>
+                <th class="text-center">Orders</th>
+                <th class="text-right">Total Spent</th>
+                <th class="text-left">Last Order</th>
+                <th class="text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody id="customersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4 : INVENTORY ================= -->
+    <section class="panel px-4 sm:px-7 pb-10" id="tab-inventory">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mt-4">
+        <div class="card p-5"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">PRODUCTS TRACKED</p><p class="text-[28px] font-extrabold text-slate-900 mt-1 leading-none">8</p></div>
+        <div class="card p-5"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">TOTAL STOCK VALUE</p><p class="text-[28px] font-extrabold text-slate-900 mt-1 leading-none">₹21,940</p></div>
+        <div class="card p-5"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">LOW STOCK</p><p class="text-[28px] font-extrabold text-orange-600 mt-1 leading-none" id="invLow">3</p></div>
+        <div class="card p-5"><p class="text-[10.5px] font-extrabold tracking-widest text-slate-400">OUT OF STOCK</p><p class="text-[28px] font-extrabold text-rose-600 mt-1 leading-none" id="invOut">1</p></div>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-5">
+        <div class="card p-5 xl:col-span-2">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Stock overview</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Sold vs available per product</p>
+          <div class="chart-box mt-3"><canvas id="stockChart"></canvas></div>
+        </div>
+        <div class="card p-5">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Reorder alerts</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Available stock at or below reorder level</p>
+          <div class="mt-4 space-y-3" id="reorderList"></div>
+        </div>
+      </div>
+
+      <div class="card mt-5">
+        <div class="p-5 border-b border-slate-100">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Inventory</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Ridiculously simple: Available = Starting Stock − Sold. LOW STOCK appears automatically.</p>
+        </div>
+        <div class="scroll-x">
+          <table class="w-full min-w-[920px]">
+            <thead>
+              <tr>
+                <th class="text-left">Product</th>
+                <th class="text-left">SKU</th>
+                <th class="text-center">Starting Stock</th>
+                <th class="text-center">Sold</th>
+                <th class="text-center">Available</th>
+                <th class="text-center">Reorder Level</th>
+                <th class="text-left">Stock Level</th>
+                <th class="text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 5 : PROFIT CALCULATOR ================= -->
+    <section class="panel px-4 sm:px-7 pb-10" id="tab-profit">
+      <div class="grid grid-cols-1 xl:grid-cols-5 gap-5 mt-4">
+        <!-- INPUTS -->
+        <div class="card p-6 xl:col-span-2">
+          <h3 class="text-[16px] font-extrabold text-slate-900">Profit calculator</h3>
+          <p class="text-[12px] text-slate-400 font-medium mt-0.5">Enter your real numbers — see profit instantly.</p>
+
+          <div class="mt-5">
+            <label class="text-[11px] font-extrabold tracking-widest text-slate-400">PRODUCT</label>
+            <select id="calcProduct" class="field mt-2">
+              <option>Customised Name Bracelet</option>
+              <option>Resin Coaster Set</option>
+              <option>Beaded Necklace</option>
+              <option>Scented Soy Candle</option>
+              <option>Macramé Keychain</option>
+              <option>Handmade Journal</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3.5 mt-4">
+            <div>
+              <label class="text-[11px] font-extrabold tracking-widest text-slate-400">PRODUCT / MATERIAL COST</label>
+              <input type="number" id="cMaterial" class="field mt-2" value="240">
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold tracking-widest text-slate-400">PACKAGING</label>
+              <input type="number" id="cPack" class="field mt-2" value="30">
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold tracking-widest text-slate-400">SHIPPING CONTRIBUTION</label>
+              <input type="number" id="cShip" class="field mt-2" value="50">
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold tracking-widest text-slate-400">PAYMENT / PLATFORM FEE</label>
+              <input type="number" id="cFee" class="field mt-2" value="10">
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold tracking-widest text-slate-400">OTHER COSTS</label>
+              <input type="number" id="cOther" class="field mt-2" value="20">
+            </div>
+            <div>
+              <label class="text-[11px] font-extrabold tracking-widest text-slate-400">SELLING PRICE</label>
+              <input type="number" id="cPrice" class="field mt-2" value="699" style="border-color:#c4b5fd">
+            </div>
+          </div>
+
+          <div class="mt-5 rounded-2xl p-4" style="background:linear-gradient(120deg,#faf5ff,#fff1f2)">
+            <div class="flex items-center justify-between">
+              <p class="text-[11px] font-extrabold tracking-widest text-slate-500">“I WANT THIS MARGIN”</p>
+              <p class="text-[18px] font-extrabold grad-text" id="targetMarginLabel">40%</p>
+            </div>
+            <input type="range" id="targetMargin" min="5" max="80" value="40" class="w-full mt-3 accent-purple-600">
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div class="bg-white rounded-xl p-3">
+                <p class="text-[10px] font-extrabold tracking-widest text-slate-400">PRICE NEEDED</p>
+                <p class="text-[17px] font-extrabold text-slate-900 mt-1" id="neededPrice">₹583</p>
+              </div>
+              <div class="bg-white rounded-xl p-3">
+                <p class="text-[10px] font-extrabold tracking-widest text-slate-400">MAX COST ALLOWED</p>
+                <p class="text-[17px] font-extrabold text-slate-900 mt-1" id="maxCost">₹419</p>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 font-semibold mt-3 leading-relaxed" id="marginAdvice"></p>
+          </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="xl:col-span-3 space-y-5">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div class="card p-5 relative overflow-hidden">
+              <div class="kpi-accent" style="background:#7c3aed"></div>
+              <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400 relative">SELLING PRICE</p>
+              <p class="text-[26px] font-extrabold text-slate-900 mt-1.5 leading-none relative" id="resPrice">₹699</p>
+            </div>
+            <div class="card p-5 relative overflow-hidden">
+              <div class="kpi-accent" style="background:#f97316"></div>
+              <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400 relative">TOTAL COST</p>
+              <p class="text-[26px] font-extrabold text-orange-600 mt-1.5 leading-none relative" id="resCost">₹350</p>
+            </div>
+            <div class="card p-5 relative overflow-hidden">
+              <div class="kpi-accent" style="background:#059669"></div>
+              <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400 relative">PROFIT</p>
+              <p class="text-[26px] font-extrabold text-emerald-600 mt-1.5 leading-none relative" id="resProfit">₹349</p>
+            </div>
+            <div class="card p-5 relative overflow-hidden">
+              <div class="kpi-accent" style="background:#ec4899"></div>
+              <p class="text-[10.5px] font-extrabold tracking-widest text-slate-400 relative">PROFIT MARGIN</p>
+              <p class="text-[26px] font-extrabold grad-text mt-1.5 leading-none relative" id="resMargin">49.9%</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="card p-5">
+              <h3 class="text-[15px] font-extrabold text-slate-900">Where your ₹699 goes</h3>
+              <p class="text-[12px] text-slate-400 font-medium mt-0.5">Cost breakdown vs profit</p>
+              <div class="chart-box mt-3"><canvas id="costChart"></canvas></div>
+            </div>
+            <div class="card p-5">
+              <h3 class="text-[15px] font-extrabold text-slate-900">Price vs cost vs profit</h3>
+              <p class="text-[12px] text-slate-400 font-medium mt-0.5">Visual margin comparison</p>
+              <div class="chart-box mt-3"><canvas id="marginChart"></canvas></div>
+              <div class="mt-4 rounded-2xl p-4 bg-slate-50">
+                <p class="text-[11px] font-extrabold tracking-widest text-slate-400">SCENARIO</p>
+                <p class="text-[12.5px] text-slate-600 font-semibold mt-1.5 leading-relaxed" id="scenarioText"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card p-5">
+            <h3 class="text-[15px] font-extrabold text-slate-900">Profit at different price points</h3>
+            <p class="text-[12px] text-slate-400 font-medium mt-0.5">How sensitive is your profit to pricing?</p>
+            <div class="chart-box mt-3"><canvas id="sensitivityChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 6 : PAYMENTS ================= -->
+    <section class="panel px-4 sm:px-7 pb-10" id="tab-payments">
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mt-4">
+        <div class="card p-6 relative overflow-hidden xl:col-span-1">
+          <div class="absolute inset-0 opacity-[0.06]" style="background:linear-gradient(135deg,#e11d48,#f97316)"></div>
+          <div class="relative">
+            <p class="text-[11px] font-extrabold tracking-widest text-slate-500">MONEY CUSTOMERS STILL OWE YOU</p>
+            <p class="text-[46px] font-extrabold text-rose-600 mt-2 leading-none" id="oweBig">₹4,750</p>
+            <p class="text-[12px] text-slate-500 font-semibold mt-3">Across <span class="text-slate-800 font-bold" id="oweCount">5</span> unpaid orders · oldest due <span class="text-slate-800 font-bold">12 days ago</span></p>
+
+            <div class="mt-5 space-y-3">
+              <div>
+                <div class="flex justify-between text-[11.5px] font-bold text-slate-500 mb-1.5"><span>Collected</span><span class="text-emerald-600">₹32,180</span></div>
+                <div class="bar-track"><div class="bar-fill" style="width:87%;background:linear-gradient(90deg,#059669,#34d399)"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[11.5px] font-bold text-slate-500 mb-1.5"><span>Outstanding</span><span class="text-rose-600">₹4,750</span></div>
+                <div class="bar-track"><div class="bar-fill" style="width:13%;background:linear-gradient(90deg,#e11d48,#fb7185)"></div></div>
+              </div>
+            </div>
+
+            <div class="mt-5 rounded-2xl bg-rose-50 p-4">
+              <p class="text-[11px] font-extrabold tracking-widest text-rose-500">ACTION NEEDED</p>
+              <p class="text-[12.5px] text-rose-700 font-semibold mt-1.5 leading-relaxed">3 payments are past their due date. Send a friendly payment reminder on WhatsApp today.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 xl:col-span-2">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="text-[16px] font-extrabold text-slate-900">Collection vs outstanding</h3>
+              <p class="text-[12px] text-slate-400 font-medium mt-0.5">How much you've collected per payment mode</p>
+            </div>
+          </div>
+          <div class="chart-box mt-3"><canvas id="payChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card mt-5">
+        <div class="p-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-[16px] font-extrabold text-slate-900">Payment tracker</h3>
+            <p class="text-[12px] text-slate-400 font-medium mt-0.5">Balance auto-calculates. Status changes colour when overdue.</p>
+          </div>
+          <div class="seg" id="paySeg">
+            <button class="on" data-pf="all">All</button>
+            <button data-pf="Pending">Pending</button>
+            <button data-pf="Partial">Partial</button>
+            <button data-pf="Paid">Paid</button>
+          </div>
+        </div>
+        <div class="scroll-x">
+          <table class="w-full min-w-[980px]">
+            <thead>
+              <tr>
+                <th class="text-left">Customer</th>
+                <th class="text-left">Order</th>
+                <th class="text-right">Total</th>
+                <th class="text-right">Received</th>
+                <th class="text-right">Balance</th>
+                <th class="text-left">Due Date</th>
+                <th class="text-left">Status</th>
+                <th class="text-left">Collection</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ADD ORDER MODAL -->
+<div id="modal" class="fixed inset-0 z-[90] hidden">
+  <div class="modal-back absolute inset-0" onclick="closeModal()"></div>
+  <div class="relative max-w-2xl w-[92%] mx-auto mt-[6vh] bg-white rounded-[24px] shadow-2xl overflow-hidden">
+    <div class="grad-bg p-6">
+      <h3 class="text-white text-[19px] font-extrabold">Add a new order</h3>
+      <p class="text-white/80 text-[12.5px] font-medium mt-1">DM came in? Log it here — everything updates automatically.</p>
+    </div>
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">CUSTOMER NAME</label><input id="mName" class="field mt-2" placeholder="e.g. Ananya Sharma"></div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">PHONE</label><input id="mPhone" class="field mt-2" placeholder="+91 98210 44521"></div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">INSTAGRAM ID</label><input id="mIg" class="field mt-2" placeholder="@username"></div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">PRODUCT</label>
+        <select id="mProduct" class="field mt-2">
+          <option>Customised Name Bracelet</option><option>Resin Coaster Set</option><option>Beaded Necklace</option>
+          <option>Scented Soy Candle</option><option>Macramé Keychain</option><option>Handmade Journal</option>
+          <option>Silk Scrunchie Set</option><option>Terracotta Earrings</option>
+        </select>
+      </div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">QTY</label><input id="mQty" type="number" class="field mt-2" value="1"></div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">AMOUNT (₹)</label><input id="mAmount" type="number" class="field mt-2" value="699"></div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">PAYMENT MODE</label>
+        <select id="mPay" class="field mt-2"><option>UPI</option><option>Cash</option><option>COD</option><option>Bank transfer</option><option>Other</option></select>
+      </div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">ORDER STATUS</label>
+        <select id="mStatus" class="field mt-2"><option>New</option><option>Preparing</option><option>Packed</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option><option>Returned</option></select>
+      </div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">ORDER DATE</label><input id="mDate" type="date" class="field mt-2"></div>
+      <div><label class="text-[11px] font-extrabold tracking-widest text-slate-400">PAID?</label>
+        <select id="mPaid" class="field mt-2"><option value="yes">Yes — paid</option><option value="no">No — due</option></select>
+      </div>
+    </div>
+    <div class="px-6 pb-6 flex gap-3 justify-end">
+      <button onclick="closeModal()" class="px-5 py-3 rounded-2xl border border-slate-200 text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition">Cancel</button>
+      <button onclick="saveOrder()" class="px-6 py-3 rounded-2xl text-white font-bold text-[13px] grad-bg shadow-lg shadow-fuchsia-500/25 hover:-translate-y-0.5 transition">Save order</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">
+  <div class="flex items-center gap-3 bg-slate-900 text-white px-5 py-4 rounded-2xl shadow-2xl">
+    <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <p class="text-[13px] font-bold" id="toastMsg">Order added successfully</p>
+  </div>
+</div>
+
+<script>
+/* ============ NAVIGATION ============ */
+const tabs = [
+  {id:'dashboard', label:'Dashboard', icon:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-5H3zM13 8h8V3h-8z"/>'},
+  {id:'orders', label:'Orders', icon:'<path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7a3 3 0 016 0"/>'},
+  {id:'customers', label:'Customers', icon:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17.5" cy="9.5" r="2.6"/><path d="M15 19a5.2 5.2 0 016.5-4.4"/>'},
+  {id:'inventory', label:'Inventory', icon:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'},
+  {id:'profit', label:'Profit Calculator', icon:'<rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8M8 12h2M12 12h4M8 16.5h2M12 16.5h4"/>'},
+  {id:'payments', label:'Payments', icon:'<rect x="2.5" y="5.5" width="19" height="13" rx="3"/><path d="M2.5 10h19"/><path d="M6 14.5h4"/>'}
+];
+const subtitles = {
+  dashboard:'Your whole business at a glance — revenue, profit, orders &amp; what needs attention today.',
+  orders:'From DM to delivery — track every order, payment mode and status in one place.',
+  customers:'Know who buys again. Auto-classified into New, Repeat and VIP.',
+  inventory:'Just enough stock tracking to never oversell. LOW STOCK appears automatically.',
+  profit:'Know exactly what you earn on every product before you quote a price.',
+  payments:'Money customers still owe you — and exactly who to chase today.'
+};
+
+function navHTML(t, mobile=false){
+  if(mobile){
+    return `<button data-tab="${t.id}" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-600 text-[12.5px] font-bold whitespace-nowrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>${t.label}</button>`;
+  }
+  return `<button data-tab="${t.id}" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-500 text-[13.5px] font-bold">
+    <span class="tab-ico w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>
+    </span>${t.label}</button>`;
+}
+document.getElementById('navDesktop').innerHTML = tabs.map(t=>navHTML(t)).join('');
+document.getElementById('navMobile').innerHTML = tabs.map(t=>navHTML(t,true)).join('');
+
+function go(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    const on = b.dataset.tab===id;
+    b.classList.toggle('active', on);
+    if(!b.closest('#navMobile')){
+      b.style.background = on ? 'linear-gradient(120deg,#7c3aed,#ec4899)' : 'transparent';
+    } else {
+      b.style.background = on ? 'linear-gradient(120deg,#7c3aed,#ec4899)' : '#fff';
+      b.style.color = on ? '#fff' : '#475569';
+      b.style.borderColor = on ? 'transparent' : '#e2e8f0';
+    }
+  });
+  document.getElementById('pageTitle').textContent = tabs.find(t=>t.id===id).label;
+  document.getElementById('pageSub').innerHTML = subtitles[id];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn');
+  if(btn) go(btn.dataset.tab);
+});
+
+/* ============ DATA ============ */
+const STATUS_STYLE = {
+  New:        {bg:'#e0f2fe', fg:'#0369a1', dot:'#0ea5e9'},
+  Preparing:  {bg:'#fef3c7', fg:'#b45309', dot:'#f59e0b'},
+  Packed:     {bg:'#ede9fe', fg:'#6d28d9', dot:'#8b5cf6'},
+  Shipped:    {bg:'#dbeafe', fg:'#1d4ed8', dot:'#3b82f6'},
+  Delivered:  {bg:'#d1fae5', fg:'#047857', dot:'#10b981'},
+  Cancelled:  {bg:'#f1f5f9', fg:'#475569', dot:'#94a3b8'},
+  Returned:   {bg:'#ffe4e6', fg:'#be123c', dot:'#f43f5e'}
+};
+
+let orders = [
+  {id:'ORD-1042', date:'2024-07-28', customer:'Ananya Sharma', phone:'+91 98210 44521', ig:'@ananya.creates', product:'Customised Name Bracelet', qty:2, amount:1398, paid:true,  payment:'UPI', status:'New', delivery:'2024-08-02'},
+  {id:'ORD-1041', date:'2024-07-27', customer:'Priya Menon', phone:'+91 99450 11238', ig:'@priya.menon', product:'Resin Coaster Set', qty:1, amount:899, paid:true, payment:'UPI', status:'Preparing', delivery:'2024-08-01'},
+  {id:'ORD-1040', date:'2024-07-26', customer:'Neha Gupta', phone:'+91 90030 77124', ig:'@neha.g', product:'Scented Soy Candle', qty:3, amount:1347, paid:false, payment:'COD', status:'Packed', delivery:'2024-08-01'},
+  {id:'ORD-1039', date:'2024-07-25', customer:'Kavya Reddy', phone:'+91 97045 22890', ig:'@kavyareddy', product:'Beaded Necklace', qty:1, amount:649, paid:true, payment:'UPI', status:'Shipped', delivery:'2024-07-30'},
+  {id:'ORD-1038', date:'2024-07-24', customer:'Riya Kapoor', phone:'+91 98765 33012', ig:'@riyakapoor', product:'Macramé Keychain', qty:4, amount:996, paid:true, payment:'Cash', status:'Delivered', delivery:'2024-07-28'},
+  {id:'ORD-1037', date:'2024-07-23', customer:'Sneha Iyer', phone:'+91 88670 45123', ig:'@sneha.iyer', product:'Handmade Journal', qty:2, amount:1198, paid:true, payment:'Bank transfer', status:'Delivered', delivery:'2024-07-27'},
+  {id:'ORD-1036', date:'2024-07-22', customer:'Ananya Sharma', phone:'+91 98210 44521', ig:'@ananya.creates', product:'Silk Scrunchie Set', qty:3, amount:747, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-26'},
+  {id:'ORD-1035', date:'2024-07-21', customer:'Divya Nair', phone:'+91 96330 88210', ig:'@divyanair', product:'Terracotta Earrings', qty:2, amount:898, paid:false, payment:'COD', status:'Cancelled', delivery:'—'},
+  {id:'ORD-1034', date:'2024-07-20', customer:'Meera Joshi', phone:'+91 99870 12450', ig:'@meera.j', product:'Customised Name Bracelet', qty:1, amount:699, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-24'},
+  {id:'ORD-1033', date:'2024-07-19', customer:'Tanvi Shah', phone:'+91 91230 67890', ig:'@tanvishah', product:'Resin Coaster Set', qty:2, amount:1798, paid:true, payment:'Bank transfer', status:'Delivered', delivery:'2024-07-23'},
+  {id:'ORD-1032', date:'2024-07-18', customer:'Kavya Reddy', phone:'+91 97045 22890', ig:'@kavyareddy', product:'Scented Soy Candle', qty:2, amount:898, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-22'},
+  {id:'ORD-1031', date:'2024-07-17', customer:'Riya Kapoor', phone:'+91 98765 33012', ig:'@riyakapoor', product:'Beaded Necklace', qty:1, amount:649, paid:false, payment:'COD', status:'Returned', delivery:'2024-07-21'},
+  {id:'ORD-1030', date:'2024-07-15', customer:'Priya Menon', phone:'+91 99450 11238', ig:'@priya.menon', product:'Handmade Journal', qty:1, amount:599, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-19'},
+  {id:'ORD-1029', date:'2024-07-14', customer:'Sneha Iyer', phone:'+91 88670 45123', ig:'@sneha.iyer', product:'Macramé Keychain', qty:6, amount:1494, paid:true, payment:'Cash', status:'Delivered', delivery:'2024-07-18'},
+  {id:'ORD-1028', date:'2024-07-12', customer:'Neha Gupta', phone:'+91 90030 77124', ig:'@neha.g', product:'Customised Name Bracelet', qty:1, amount:699, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-16'},
+  {id:'ORD-1027', date:'2024-07-10', customer:'Divya Nair', phone:'+91 96330 88210', ig:'@divyanair', product:'Silk Scrunchie Set', qty:2, amount:498, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-14'},
+  {id:'ORD-1026', date:'2024-07-08', customer:'Meera Joshi', phone:'+91 99870 12450', ig:'@meera.j', product:'Terracotta Earrings', qty:1, amount:449, paid:true, payment:'Other', status:'Delivered', delivery:'2024-07-12'},
+  {id:'ORD-1025', date:'2024-07-06', customer:'Tanvi Shah', phone:'+91 91230 67890', ig:'@tanvishah', product:'Scented Soy Candle', qty:1, amount:449, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-10'},
+  {id:'ORD-1024', date:'2024-07-04', customer:'Ananya Sharma', phone:'+91 98210 44521', ig:'@ananya.creates', product:'Resin Coaster Set', qty:1, amount:899, paid:true, payment:'Bank transfer', status:'Delivered', delivery:'2024-07-08'},
+  {id:'ORD-1023', date:'2024-07-02', customer:'Kavya Reddy', phone:'+91 97045 22890', ig:'@kavyareddy', product:'Macramé Keychain', qty:3, amount:747, paid:true, payment:'UPI', status:'Delivered', delivery:'2024-07-06'}
+];
+
+const customers = [
+  {name:'Ananya Sharma', phone:'+91 98210 44521', ig:'@ananya.creates', orders:4, spent:3343, last:'2024-07-28'},
+  {name:'Kavya Reddy', phone:'+91 97045 22890', ig:'@kavyareddy', orders:4, spent:2294, last:'2024-07-25'},
+  {name:'Priya Menon', phone:'+91 99450 11238', ig:'@priya.menon', orders:3, spent:2696, last:'2024-07-27'},
+  {name:'Neha Gupta', phone:'+91 90030 77124', ig:'@neha.g', orders:3, spent:2745, last:'2024-07-26'},
+  {name:'Sneha Iyer', phone:'+91 88670 45123', ig:'@sneha.iyer', orders:3, spent:2692, last:'2024-07-23'},
+  {name:'Riya Kapoor', phone:'+91 98765 33012', ig:'@riyakapoor', orders:3, spent:1645, last:'2024-07-24'},
+  {name:'Tanvi Shah', phone:'+91 91230 67890', ig:'@tanvishah', orders:3, spent:2247, last:'2024-07-19'},
+  {name:'Divya Nair', phone:'+91 96330 88210', ig:'@divyanair', orders:2, spent:1396, last:'2024-07-21'},
+  {name:'Meera Joshi', phone:'+91 99870 12450', ig:'@meera.j', orders:2, spent:1148, last:'2024-07-20'},
+  {name:'Ishita Rao', phone:'+91 93450 77123', ig:'@ishita.rao', orders:2, spent:1298, last:'2024-07-11'},
+  {name:'Pooja Bhatt', phone:'+91 89760 22345', ig:'@poojabhatt', orders:2, spent:948, last:'2024-07-09'},
+  {name:'Shruti Kulkarni', phone:'+91 97654 33210', ig:'@shruti.k', orders:1, spent:699, last:'2024-07-18'},
+  {name:'Aditi Verma', phone:'+91 94560 11987', ig:'@aditiverma', orders:1, spent:899, last:'2024-07-13'},
+  {name:'Ritika Sinha', phone:'+91 86540 99871', ig:'@ritikasinha', orders:1, spent:449, last:'2024-07-05'}
+];
+
+const inventory = [
+  {product:'Customised Name Bracelet', sku:'BR-001', start:60, sold:48, reorder:15},
+  {product:'Resin Coaster Set', sku:'RC-014', start:35, sold:22, reorder:10},
+  {product:'Beaded Necklace', sku:'NK-022', start:40, sold:31, reorder:12},
+  {product:'Scented Soy Candle', sku:'CN-007', start:50, sold:39, reorder:15},
+  {product:'Macramé Keychain', sku:'KC-031', start:80, sold:54, reorder:20},
+  {product:'Handmade Journal', sku:'JR-009', start:25, sold:11, reorder:8},
+  {product:'Silk Scrunchie Set', sku:'SS-018', start:45, sold:38, reorder:12},
+  {product:'Terracotta Earrings', sku:'ER-025', start:30, sold:30, reorder:10}
+];
+
+let payments = [
+  {cust:'Neha Gupta', order:'ORD-1040', total:1347, received:0, due:'2024-08-01', mode:'COD'},
+  {cust:'Divya Nair', order:'ORD-1035', total:898, received:250, due:'2024-07-31', mode:'COD'},
+  {cust:'Riya Kapoor', order:'ORD-1031', total:649, received:0, due:'2024-07-25', mode:'COD'},
+  {cust:'Ananya Sharma', order:'ORD-1042', total:1398, received:1200, due:'2024-08-02', mode:'UPI'},
+  {cust:'Pooja Bhatt', order:'ORD-1018', total:456, received:0, due:'2024-07-20', mode:'Cash'},
+  {cust:'Kavya Reddy', order:'ORD-1039', total:649, received:649, due:'2024-07-30', mode:'UPI'},
+  {cust:'Priya Menon', order:'ORD-1041', total:899, received:899, due:'2024-08-01', mode:'UPI'},
+  {cust:'Sneha Iyer', order:'ORD-1037', total:1198, received:1198, due:'2024-07-27', mode:'Bank transfer'},
+  {cust:'Tanvi Shah', order:'ORD-1033', total:1798, received:1798, due:'2024-07-23', mode:'Bank transfer'}
+];
+
+const monthly = {
+  labels:['Feb','Mar','Apr','May','Jun','Jul','Aug'],
+  revenue:[21400,24800,27600,31200,29850,34900,38450],
+  profit:[8100,9400,10200,11800,11150,13200,14620],
+  orders:[26,30,34,38,36,43,47]
+};
+
+/* ============ HELPERS ============ */
+const inr = n => '₹' + Number(n).toLocaleString('en-IN');
+const fmtDate = d => {
+  if(!d || d==='—') return '—';
+  const dt = new Date(d);
+  return isNaN(dt) ? d : dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+};
+function classify(n){ return n>=4 ? 'VIP' : n>=2 ? 'Repeat customer' : 'New customer'; }
+function classStyle(c){
+  return c==='VIP' ? {bg:'#fef3c7',fg:'#b45309'} : c==='Repeat customer' ? {bg:'#ede9fe',fg:'#6d28d9'} : {bg:'#e0f2fe',fg:'#0369a1'};
+}
+
+/* ============ CHART DEFAULTS ============ */
+Chart.defaults.font.family = "'Plus Jakarta Sans','Inter',sans-serif";
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.size = 11;
+Chart.defaults.maintainAspectRatio = true;
+
+function grad(ctx, area, c1, c2, vertical=true){
+  const g = vertical
+    ? ctx.createLinearGradient(0, area.bottom, 0, area.top)
+    : ctx.createLinearGradient(area.left, 0, area.right, 0);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+const tooltipCfg = {
+  backgroundColor:'#0f172a', padding:12, cornerRadius:12,
+  titleFont:{size:12,weight:'700'}, bodyFont:{size:11.5,weight:'600'},
+  displayColors:true, boxPadding:5, borderColor:'rgba(255,255,255,.1)', borderWidth:1
+};
+const gridCfg = { color:'rgba(148,163,184,.15)', drawBorder:false };
+
+/* ============ DASHBOARD CHARTS ============ */
+const salesCtx = document.getElementById('salesChart');
+const salesChart = new Chart(salesCtx, {
+  type:'bar',
+  data:{
+    labels: monthly.labels,
+    datasets:[
+      {
+        label:'Revenue', data: monthly.revenue, borderRadius:10, borderSkipped:false, order:2,
+        backgroundColor:(c)=>{
+          const {ctx, chartArea} = c.chart; if(!chartArea) return '#7c3aed';
+          return grad(ctx, chartArea, 'rgba(124,58,237,.35)', 'rgba(124,58,237,1)');
+        },
+        barPercentage:.62, categoryPercentage:.72, yAxisID:'y'
+      },
+      {
+        label:'Profit', data: monthly.profit, borderRadius:10, borderSkipped:false, order:2,
+        backgroundColor:(c)=>{
+          const {ctx, chartArea} = c.chart; if(!chartArea) return '#ec4899';
+          return grad(ctx, chartArea, 'rgba(236,72,153,.32)', 'rgba(236,72,153,1)');
+        },
+        barPercentage:.62, categoryPercentage:.72, yAxisID:'y'
+      },
+      {
+        label:'Orders', data: monthly.orders, type:'line', order:1,
+        borderColor:'#f97316', backgroundColor:'#f97316', borderWidth:2.5, tension:.4,
+        pointRadius:4, pointHoverRadius:7, pointBackgroundColor:'#fff', pointBorderWidth:2.5,
+        yAxisID:'y1'
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:2.35,
+    interaction:{mode:'index', intersect:false},
+    plugins:{
+      legend:{position:'top', align:'end', labels:{usePointStyle:true, pointStyle:'circle', boxWidth:8, padding:18, font:{size:11.5,weight:'700'}}},
+      tooltip:{...tooltipCfg, callbacks:{ label:(c)=> c.dataset.label==='Orders' ? ` ${c.dataset.label}: ${c.parsed.y}` : ` ${c.dataset.label}: ${inr(c.parsed.y)}` }}
+    },
+    scales:{
+      x:{grid:{display:false}, ticks:{font:{weight:'700',size:11}}},
+      y:{grid:gridCfg, border:{display:false}, ticks:{callback:v=>'₹'+(v/1000)+'k', font:{weight:'600'}}},
+      y1:{position:'right', grid:{display:false}, border:{display:false}, ticks:{callback:v=>v, font:{weight:'600',size:10.5}}, min:0, max:60}
+    }
+  }
+});
+
+document.querySelectorAll('#salesSeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#salesSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const m = b.dataset.mode;
+    salesChart.data.datasets[0].hidden = (m==='profit');
+    salesChart.data.datasets[1].hidden = (m==='revenue');
+    salesChart.data.datasets[2].hidden = (m!=='both');
+    salesChart.update();
+  });
+});
+
+const topProducts = [
+  {name:'Customised Name Bracelet', units:48, color:'#7c3aed'},
+  {name:'Macramé Keychain', units:54, color:'#ec4899'},
+  {name:'Silk Scrunchie Set', units:38, color:'#f97316'},
+  {name:'Scented Soy Candle', units:39, color:'#0ea5e9'},
+  {name:'Beaded Necklace', units:31, color:'#10b981'}
+].sort((a,b)=>b.units-a.units);
+
+new Chart(document.getElementById('topProductsChart'), {
+  type:'doughnut',
+  data:{
+    labels: topProducts.map(p=>p.name),
+    datasets:[{
+      data: topProducts.map(p=>p.units),
+      backgroundColor: topProducts.map(p=>p.color),
+      borderColor:'#fff', borderWidth:3, hoverOffset:10
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:1.25, cutout:'62%',
+    plugins:{
+      legend:{display:false},
+      tooltip:{...tooltipCfg, callbacks:{ label:(c)=> ` ${c.label}: ${c.parsed} units` }}
+    }
+  }
+});
+document.getElementById('topProductsLegend').innerHTML = topProducts.slice(0,4).map(p=>`
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${p.color}"></span>
+      <p class="text-[12px] font-semibold text-slate-600 truncate">${p.name}</p>
+    </div>
+    <p class="text-[12px] font-extrabold text-slate-900">${p.units}</p>
+  </div>`).join('');
+
+/* pipeline */
+const statusOrder = ['New','Preparing','Packed','Shipped','Delivered','Cancelled','Returned'];
+function statusCounts(){
+  return statusOrder.map(s=> orders.filter(o=>o.status===s).length);
+}
+function renderPipeline(){
+  const counts = statusCounts();
+  document.getElementById('pipeline').innerHTML = statusOrder.map((s,i)=>{
+    const st = STATUS_STYLE[s];
+    return `<div class="rounded-2xl p-3.5" style="background:${st.bg}">
+      <div class="flex items-center gap-1.5">
+        <span class="dot" style="background:${st.dot}"></span>
+        <p class="text-[10px] font-extrabold tracking-wider" style="color:${st.fg}">${s.toUpperCase()}</p>
+      </div>
+      <p class="text-[22px] font-extrabold mt-1.5 leading-none" style="color:${st.fg}">${counts[i]}</p>
+    </div>`;
+  }).join('');
+}
+renderPipeline();
+
+new Chart(document.getElementById('pipelineChart'), {
+  type:'bar',
+  data:{
+    labels: statusOrder,
+    datasets:[{
+      label:'Orders',
+      data: statusCounts(),
+      backgroundColor: statusOrder.map(s=>STATUS_STYLE[s].dot),
+      borderRadius:10, borderSkipped:false, barPercentage:.62
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:3.4,
+    plugins:{ legend:{display:false}, tooltip:{...tooltipCfg} },
+    scales:{
+      x:{grid:{display:false}, ticks:{font:{weight:'700',size:10.5}}},
+      y:{grid:gridCfg, border:{display:false}, ticks:{stepSize:2, font:{weight:'600'}}}
+    }
+  }
+});
+
+/* ============ ORDERS TABLE ============ */
+function renderOrders(){
+  const q = document.getElementById('orderSearch').value.toLowerCase();
+  const st = document.getElementById('statusFilter').value;
+  const pf = document.getElementById('payFilter').value;
+  const rows = orders.filter(o=>{
+    const matchQ = (o.id+o.customer+o.product+o.ig).toLowerCase().includes(q);
+    return matchQ && (st==='all'||o.status===st) && (pf==='all'||o.payment===pf);
+  });
+
+  document.getElementById('ordersBody').innerHTML = rows.map(o=>{
+    const s = STATUS_STYLE[o.status];
+    return `<tr>
+      <td class="font-extrabold text-slate-800">${o.id}</td>
+      <td class="text-slate-500 font-medium">${fmtDate(o.date)}</td>
+      <td>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold text-white flex-shrink-0" style="background:linear-gradient(135deg,#a855f7,#ec4899)">${o.customer.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
+          <div>
+            <p class="font-bold text-slate-800 leading-tight">${o.customer}</p>
+            <p class="text-[10.5px] text-slate-400 font-semibold">${o.ig}</p>
+          </div>
+        </div>
+      </td>
+      <td class="text-slate-600 font-semibold">${o.product}</td>
+      <td class="text-center font-bold text-slate-600">${o.qty}</td>
+      <td class="text-right font-extrabold text-slate-900">${inr(o.amount)}</td>
+      <td class="text-center">
+        ${o.paid
+          ? `<span class="badge" style="background:#d1fae5;color:#047857"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg>Paid</span>`
+          : `<span class="badge" style="background:#ffe4e6;color:#be123c">Due</span>`}
+      </td>
+      <td><span class="chip" style="background:#f1f5f9;color:#475569">${o.payment}</span></td>
+      <td>
+        <span class="badge" style="background:${s.bg};color:${s.fg}">
+          <span class="dot" style="background:${s.dot}"></span>${o.status}
+        </span>
+      </td>
+      <td class="text-slate-500 font-medium">${fmtDate(o.delivery)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('ordShown').textContent = rows.length;
+  const total = orders.reduce((a,b)=>a+b.amount,0);
+  const paid = orders.filter(o=>o.paid).reduce((a,b)=>a+b.amount,0);
+  document.getElementById('ordTotal').textContent = orders.length;
+  document.getElementById('ordValue').textContent = inr(total);
+  document.getElementById('ordPaid').textContent = inr(paid);
+  document.getElementById('ordUnpaid').textContent = inr(total-paid);
+  document.getElementById('ordDelivered').textContent = orders.filter(o=>o.status==='Delivered').length;
+
+  const ship = orders.filter(o=>!['Delivered','Cancelled','Returned'].includes(o.status)).length;
+  document.getElementById('kpiShip').textContent = ship;
+}
+document.getElementById('statusLegend').innerHTML = statusOrder.map(s=>{
+  const st = STATUS_STYLE[s];
+  return `<span class="chip" style="background:${st.bg};color:${st.fg}"><span class="dot inline-block" style="background:${st.dot}"></span> ${s}</span>`;
+}).join('');
+
+['orderSearch','statusFilter','payFilter'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderOrders);
+  document.getElementById(id).addEventListener('change', renderOrders);
+});
+renderOrders();
+
+/* ============ CUSTOMERS ============ */
+function renderCustomers(){
+  const q = document.getElementById('custSearch').value.toLowerCase();
+  const rows = customers.filter(c=>(c.name+c.ig).toLowerCase().includes(q)).sort((a,b)=>b.spent-a.spent);
+  document.getElementById('customersBody').innerHTML = rows.map(c=>{
+    const cls = classify(c.orders); const s = classStyle(cls);
+    return `<tr>
+      <td>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold text-white flex-shrink-0" style="background:linear-gradient(135deg,#7c3aed,#f97316)">${c.name.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
+          <p class="font-bold text-slate-800">${c.name}</p>
+        </div>
+      </td>
+      <td class="text-slate-500 font-medium">${c.phone}</td>
+      <td class="text-violet-600 font-semibold">${c.ig}</td>
+      <td class="text-center"><span class="chip bg-slate-100 text-slate-700">${c.orders}</span></td>
+      <td class="text-right font-extrabold text-slate-900">${inr(c.spent)}</td>
+      <td class="text-slate-500 font-medium">${fmtDate(c.last)}</td>
+      <td><span class="badge" style="background:${s.bg};color:${s.fg}">${cls}</span></td>
+    </tr>`;
+  }).join('');
+}
+document.getElementById('custSearch').addEventListener('input', renderCustomers);
+renderCustomers();
+
+new Chart(document.getElementById('customerMixChart'), {
+  type:'doughnut',
+  data:{
+    labels:['New customer','Repeat customer','VIP'],
+    datasets:[{ data:[3,7,4], backgroundColor:['#0ea5e9','#7c3aed','#f59e0b'], borderColor:'#fff', borderWidth:4, hoverOffset:10 }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:1.5, cutout:'60%',
+    plugins:{ legend:{display:false}, tooltip:{...tooltipCfg, callbacks:{label:c=>` ${c.label}: ${c.parsed} customers`}} }
+  }
+});
+
+const topCust = [...customers].sort((a,b)=>b.spent-a.spent).slice(0,8);
+new Chart(document.getElementById('topCustomersChart'), {
+  type:'bar',
+  data:{
+    labels: topCust.map(c=>c.name),
+    datasets:[{
+      label:'Total spent',
+      data: topCust.map(c=>c.spent),
+      backgroundColor:(c)=>{
+        const {ctx, chartArea} = c.chart; if(!chartArea) return '#7c3aed';
+        return grad(ctx, chartArea, 'rgba(124,58,237,.25)', 'rgba(236,72,153,1)', false);
+      },
+      borderRadius:10, borderSkipped:false, barPercentage:.68
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:2.4,
+    plugins:{ legend:{display:false}, tooltip:{...tooltipCfg, callbacks:{label:c=>` Spent: ${inr(c.parsed.y)}`}} },
+    scales:{
+      x:{grid:{display:false}, ticks:{font:{weight:'700',size:10}}},
+      y:{grid:gridCfg, border:{display:false}, ticks:{callback:v=>'₹'+(v/1000)+'k', font:{weight:'600'}}}
+    }
+  }
+});
+
+/* ============ INVENTORY ============ */
+function renderInventory(){
+  document.getElementById('inventoryBody').innerHTML = inventory.map(p=>{
+    const avail = p.start - p.sold;
+    const low = avail <= p.reorder;
+    const out = avail === 0;
+    const pct = Math.max(4, Math.min(100, (avail/p.start)*100));
+    const status = out ? 'OUT OF STOCK' : low ? 'LOW STOCK' : 'IN STOCK';
+    const s = out ? {bg:'#ffe4e6',fg:'#be123c',dot:'#f43f5e',bar:'#f43f5e'}
+              : low ? {bg:'#ffedd5',fg:'#c2410c',dot:'#f97316',bar:'#f97316'}
+              : {bg:'#d1fae5',fg:'#047857',dot:'#10b981',bar:'#10b981'};
+    return `<tr>
+      <td class="font-bold text-slate-800">${p.product}</td>
+      <td class="text-slate-500 font-semibold">${p.sku}</td>
+      <td class="text-center text-slate-600 font-semibold">${p.start}</td>
+      <td class="text-center text-slate-600 font-semibold">${p.sold}</td>
+      <td class="text-center font-extrabold text-slate-900">${avail}</td>
+      <td class="text-center text-slate-500 font-semibold">${p.reorder}</td>
+      <td style="min-width:160px">
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${s.bar}"></div></div>
+      </td>
+      <td><span class="badge" style="background:${s.bg};color:${s.fg}"><span class="dot" style="background:${s.dot}"></span>${status}</span></td>
+    </tr>`;
+  }).join('');
+
+  const low = inventory.filter(p=>p.start-p.sold <= p.reorder);
+  document.getElementById('invLow').textContent = low.length;
+  document.getElementById('invOut').textContent = inventory.filter(p=>p.start-p.sold===0).length;
+  document.getElementById('kpiLow').textContent = low.length;
+
+  document.getElementById('reorderList').innerHTML = low.length ? low.map(p=>{
+    const avail = p.start-p.sold;
+    return `<div class="rounded-2xl p-4" style="background:${avail===0?'#fff1f2':'#fff7ed'}">
+      <div class="flex items-center justify-between">
+        <p class="text-[12.5px] font-bold text-slate-800">${p.product}</p>
+        <span class="chip" style="background:${avail===0?'#ffe4e6':'#ffedd5'};color:${avail===0?'#be123c':'#c2410c'}">${avail===0?'OUT':'LOW'}</span>
+      </div>
+      <div class="flex items-center justify-between mt-2">
+        <p class="text-[11px] font-semibold text-slate-500">Available <span class="text-slate-800 font-bold">${avail}</span> · Reorder at <span class="text-slate-800 font-bold">${p.reorder}</span></p>
+        <p class="text-[11px] font-bold text-orange-600">Buy ${Math.max(10, p.reorder*2 - avail)} pcs</p>
+      </div>
+    </div>`;
+  }).join('') : `<p class="text-[12px] text-slate-400 font-semibold">All products are above their reorder level. 🎉</p>`;
+}
+renderInventory();
+
+new Chart(document.getElementById('stockChart'), {
+  type:'bar',
+  data:{
+    labels: inventory.map(p=>p.product),
+    datasets:[
+      { label:'Sold', data:inventory.map(p=>p.sold), backgroundColor:'#7c3aed', borderRadius:8, borderSkipped:false, stack:'s', barPercentage:.68 },
+      { label:'Available', data:inventory.map(p=>p.start-p.sold), backgroundColor:'#e9d5ff', borderRadius:8, borderSkipped:false, stack:'s', barPercentage:.68 }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:2.2,
+    plugins:{
+      legend:{position:'top',align:'end',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:8,padding:16,font:{weight:'700'}}},
+      tooltip:tooltipCfg
+    },
+    scales:{
+      x:{stacked:true, grid:{display:false}, ticks:{font:{weight:'700',size:9.5}, maxRotation:38, minRotation:22}},
+      y:{stacked:true, grid:gridCfg, border:{display:false}, ticks:{font:{weight:'600'}}}
+    }
+  }
+});
+
+/* ============ PROFIT CALCULATOR ============ */
+const calcIds = ['cMaterial','cPack','cShip','cFee','cOther','cPrice'];
+let costChart, marginChart, sensitivityChart;
+
+function getCalc(){
+  const v = id => Math.max(0, Number(document.getElementById(id).value)||0);
+  const cost = v('cMaterial')+v('cPack')+v('cShip')+v('cFee')+v('cOther');
+  const price = v('cPrice');
+  const profit = price-cost;
+  const margin = price>0 ? (profit/price)*100 : 0;
+  return {m:v('cMaterial'),p:v('cPack'),s:v('cShip'),f:v('cFee'),o:v('cOther'),cost,price,profit,margin};
+}
+
+function initCalcCharts(){
+  costChart = new Chart(document.getElementById('costChart'), {
+    type:'doughnut',
+    data:{
+      labels:['Material','Packaging','Shipping','Platform fee','Other','Profit'],
+      datasets:[{
+        data:[240,30,50,10,20,349],
+        backgroundColor:['#7c3aed','#a855f7','#ec4899','#f97316','#fbbf24','#10b981'],
+        borderColor:'#fff', borderWidth:3, hoverOffset:8
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, aspectRatio:1.35, cutout:'58%',
+      plugins:{
+        legend:{position:'bottom', labels:{usePointStyle:true, pointStyle:'circle', boxWidth:8, padding:12, font:{size:10.5,weight:'700'}}},
+        tooltip:{...tooltipCfg, callbacks:{label:c=>` ${c.label}: ${inr(c.parsed)}`}}
+      }
+    }
+  });
+
+  marginChart = new Chart(document.getElementById('marginChart'), {
+    type:'bar',
+    data:{
+      labels:['Price','Cost','Profit'],
+      datasets:[{
+        data:[699,350,349],
+        backgroundColor:['#7c3aed','#f97316','#10b981'],
+        borderRadius:12, borderSkipped:false, barPercentage:.58
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, aspectRatio:1.6,
+      plugins:{legend:{display:false}, tooltip:{...tooltipCfg, callbacks:{label:c=>` ${inr(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{weight:'800',size:11.5}}},
+        y:{grid:gridCfg, border:{display:false}, ticks:{callback:v=>'₹'+v, font:{weight:'600'}}}
+      }
+    }
+  });
+
+  sensitivityChart = new Chart(document.getElementById('sensitivityChart'), {
+    type:'line',
+    data:{
+      labels:[], datasets:[
+        { label:'Profit per unit', data:[], borderColor:'#7c3aed', borderWidth:3, tension:.4, fill:true,
+          backgroundColor:(c)=>{ const {ctx,chartArea}=c.chart; if(!chartArea) return 'rgba(124,58,237,.15)';
+            const g=ctx.createLinearGradient(0,chartArea.bottom,0,chartArea.top); g.addColorStop(0,'rgba(124,58,237,0)'); g.addColorStop(1,'rgba(124,58,237,.28)'); return g; },
+          pointRadius:5, pointBackgroundColor:'#fff', pointBorderWidth:2.5, pointBorderColor:'#7c3aed' },
+        { label:'Margin %', data:[], borderColor:'#ec4899', borderWidth:2.5, borderDash:[6,5], tension:.4,
+          pointRadius:4, pointBackgroundColor:'#fff', pointBorderWidth:2.5, pointBorderColor:'#ec4899', yAxisID:'y1' }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true, aspectRatio:3,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',align:'end',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:8,padding:16,font:{weight:'700'}}},
+        tooltip:tooltipCfg
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{weight:'700'}}},
+        y:{grid:gridCfg, border:{display:false}, ticks:{callback:v=>'₹'+v, font:{weight:'600'}}},
+        y1:{position:'right', grid:{display:false}, border:{display:false}, ticks:{callback:v=>v+'%', font:{weight:'600'}}}
+      }
+    }
+  });
+}
+
+function updateCalc(){
+  const c = getCalc();
+  document.getElementById('resPrice').textContent = inr(c.price);
+  document.getElementById('resCost').textContent = inr(c.cost);
+  document.getElementById('resProfit').textContent = inr(c.profit);
+  document.getElementById('resMargin').textContent = c.margin.toFixed(1)+'%';
+  document.getElementById('resProfit').style.color = c.profit>=0 ? '#059669' : '#e11d48';
+
+  costChart.data.datasets[0].data = [c.m,c.p,c.s,c.f,c.o, Math.max(c.profit,0)];
+  costChart.update();
+  marginChart.data.datasets[0].data = [c.price, c.cost, Math.max(c.profit,0)];
+  marginChart.update();
+
+  const target = Number(document.getElementById('targetMargin').value);
+  document.getElementById('targetMarginLabel').textContent = target+'%';
+  const neededPrice = c.cost / (1 - target/100);
+  const maxCost = c.price * (1 - target/100);
+  document.getElementById('neededPrice').textContent = inr(Math.round(neededPrice));
+  document.getElementById('maxCost').textContent = inr(Math.round(maxCost));
+
+  const name = document.getElementById('calcProduct').value;
+  let advice;
+  if(c.margin >= target){
+    advice = `✅ You're beating your target. At ${inr(c.price)}, the ${name} gives you ${c.margin.toFixed(1)}% margin — ${c.margin-target>=0?(c.margin-target).toFixed(1):0} points above your goal. You could even price lower to sell faster.`;
+  } else {
+    advice = `⚠️ You're ${(target-c.margin).toFixed(1)} points short of your ${target}% goal. Either raise the price to ${inr(Math.round(neededPrice))} or cut costs by ${inr(Math.round(Math.max(0,c.cost-maxCost)))} per unit.`;
+  }
+  document.getElementById('marginAdvice').textContent = advice;
+
+  document.getElementById('scenarioText').innerHTML =
+    `On <b>${name}</b>: every sale puts <b class="text-emerald-600">${inr(c.profit)}</b> in your pocket. Sell <b>30 units</b> this month → <b>${inr(c.profit*30)}</b> profit on <b>${inr(c.price*30)}</b> revenue.`;
+
+  const prices = [Math.round(c.price*0.7/10)*10, Math.round(c.price*0.85/10)*10, c.price, Math.round(c.price*1.15/10)*10, Math.round(c.price*1.3/10)*10];
+  sensitivityChart.data.labels = prices.map(p=>'₹'+p);
+  sensitivityChart.data.datasets[0].data = prices.map(p=>p-c.cost);
+  sensitivityChart.data.datasets[1].data = prices.map(p=> p>0 ? +(((p-c.cost)/p)*100).toFixed(1) : 0);
+  sensitivityChart.update();
+}
+calcIds.forEach(id=>document.getElementById(id).addEventListener('input', updateCalc));
+document.getElementById('targetMargin').addEventListener('input', updateCalc);
+document.getElementById('calcProduct').addEventListener('change', updateCalc);
+initCalcCharts();
+updateCalc();
+
+/* ============ PAYMENTS ============ */
+function payStatus(p){
+  const bal = p.total-p.received;
+  if(bal<=0) return 'Paid';
+  if(p.received>0) return 'Partial';
+  return 'Pending';
+}
+function renderPayments(filter='all'){
+  const rows = payments.filter(p=> filter==='all' || payStatus(p)===filter);
+  document.getElementById('paymentsBody').innerHTML = rows.map(p=>{
+    const bal = p.total-p.received;
+    const st = payStatus(p);
+    const overdue = new Date(p.due) < new Date('2024-07-30') && bal>0;
+    const cfg = st==='Paid' ? {bg:'#d1fae5',fg:'#047857',dot:'#10b981'}
+              : st==='Partial' ? {bg:'#fef3c7',fg:'#b45309',dot:'#f59e0b'}
+              : {bg:'#ffe4e6',fg:'#be123c',dot:'#f43f5e'};
+    const pct = Math.round((p.received/p.total)*100);
+    return `<tr>
+      <td>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold text-white flex-shrink-0" style="background:linear-gradient(135deg,#0ea5e9,#7c3aed)">${p.cust.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
+          <p class="font-bold text-slate-800">${p.cust}</p>
+        </div>
+      </td>
+      <td class="text-slate-500 font-semibold">${p.order} <span class="chip ml-1" style="background:#f1f5f9;color:#64748b">${p.mode}</span></td>
+      <td class="text-right font-bold text-slate-700">${inr(p.total)}</td>
+      <td class="text-right font-bold text-emerald-600">${inr(p.received)}</td>
+      <td class="text-right font-extrabold ${bal>0?'text-rose-600':'text-slate-400'}">${inr(bal)}</td>
+      <td>
+        <p class="font-semibold ${overdue?'text-rose-600':'text-slate-500'}">${fmtDate(p.due)}</p>
+        ${overdue?'<p class="text-[10px] font-bold text-rose-500">OVERDUE</p>':''}
+      </td>
+      <td><span class="badge" style="background:${cfg.bg};color:${cfg.fg}"><span class="dot" style="background:${cfg.dot}"></span>${st}</span></td>
+      <td style="min-width:150px">
+        <div class="flex items-center gap-2">
+          <div class="bar-track flex-1"><div class="bar-fill" style="width:${pct}%;background:${pct===100?'#10b981':'#f59e0b'}"></div></div>
+          <span class="text-[10.5px] font-bold text-slate-500">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const owed = payments.reduce((a,b)=>a+(b.total-b.received),0);
+  document.getElementById('oweBig').textContent = inr(owed);
+  document.getElementById('oweCount').textContent = payments.filter(p=>p.total-p.received>0).length;
+}
+renderPayments();
+document.querySelectorAll('#paySeg button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#paySeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    renderPayments(b.dataset.pf);
+  });
+});
+
+new Chart(document.getElementById('payChart'), {
+  type:'bar',
+  data:{
+    labels:['UPI','Cash','COD','Bank transfer','Other'],
+    datasets:[
+      { label:'Received', data:[21480,3290,1850,5560,0], backgroundColor:'#10b981', borderRadius:9, borderSkipped:false, barPercentage:.62, stack:'a' },
+      { label:'Outstanding', data:[1198,456,2245,0,851], backgroundColor:'#fb7185', borderRadius:9, borderSkipped:false, barPercentage:.62, stack:'a' }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true, aspectRatio:2.6,
+    plugins:{
+      legend:{position:'top',align:'end',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:8,padding:16,font:{weight:'700'}}},
+      tooltip:{...tooltipCfg, callbacks:{label:c=>` ${c.dataset.label}: ${inr(c.parsed.y)}`}}
+    },
+    scales:{
+      x:{stacked:true, grid:{display:false}, ticks:{font:{weight:'700',size:10.5}}},
+      y:{stacked:true, grid:gridCfg, border:{display:false}, ticks:{callback:v=>'₹'+(v/1000)+'k', font:{weight:'600'}}}
+    }
+  }
+});
+
+/* ============ MODAL ============ */
+function openModal(){
+  document.getElementById('modal').classList.remove('hidden');
+  const d = new Date();
+  document.getElementById('mDate').value = d.toISOString().slice(0,10);
+}
+function closeModal(){ document.getElementById('modal').classList.add('hidden'); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function saveOrder(){
+  const name = document.getElementById('mName').value.trim() || 'New Customer';
+  const price = Number(document.getElementById('mAmount').value)||0;
+  const qty = Number(document.getElementById('mQty').value)||1;
+  const paid = document.getElementById('mPaid').value === 'yes';
+  const id = 'ORD-' + (1043 + orders.length - 20);
+  orders.unshift({
+    id,
+    date: document.getElementById('mDate').value || new Date().toISOString().slice(0,10),
+    customer:name,
+    phone: document.getElementById('mPhone').value || '—',
+    ig: document.getElementById('mIg').value || '@—',
+    product: document.getElementById('mProduct').value,
+    qty, amount: price*qty,
+    paid,
+    payment: document.getElementById('mPay').value,
+    status: document.getElementById('mStatus').value,
+    delivery:'—'
+  });
+  renderOrders();
+  renderPipeline();
+  const counts = statusCounts();
+  salesChart.update();
+  closeModal();
+  toast(`${id} added · ${name}`);
+  ['mName','mPhone','mIg'].forEach(i=>document.getElementById(i).value='');
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ============ INIT ============ */
+go('dashboard');
+</script>
+</body>
+</html>
